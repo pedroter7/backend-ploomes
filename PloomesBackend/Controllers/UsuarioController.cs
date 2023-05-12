@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+using PloomesBackend.Controllers.Extensions;
 using PloomesBackend.Data.Exceptions;
 using PloomesBackend.Data.Repository;
 using PloomesBackend.ViewModels;
@@ -30,12 +30,7 @@ namespace PloomesBackend.Controllers
             try
             {
                 var id = await _usuarioRepository.InserirUsuario(model.Nome, model.Email, model.Senha);
-                return new ContentResult
-                {
-                    Content = JsonConvert.SerializeObject(new RecursoCriadoReturnViewModel { Id = id }),
-                    ContentType = "application/json",
-                    StatusCode = StatusCodes.Status201Created
-                };
+                return this.CreatedJsonContentResult(new RecursoCriadoReturnViewModel { Id = id });
             }
             catch (EntidadeJaExisteException)
             {
