@@ -10,6 +10,7 @@ namespace PloomesBackend.ViewModels
 
         [Required(AllowEmptyStrings = false)]
         [MaxLength(150)]
+        [EmailAddress]
         public string Email { get; set; } = null!;
 
         [Required(AllowEmptyStrings = false)]
