@@ -1,3 +1,4 @@
+using PloomesBackend.Config.Mappings;
 using PloomesBackend.Data.Queries;
 using PloomesBackend.Data.Repository;
 using PloomesBackend.Data.Util;
@@ -18,6 +19,9 @@ builder.Services.AddAuthorization(opts =>
         authBuilder.RequireClaim(ClaimTypes.Email);
     });
 });
+
+builder.Services.AddAutoMapper(typeof(DataToViewModelMappingProfile));
+builder.Services.AddAutoMapper(typeof(ViewModelToDataMappingProfile));
 
 builder.Services.AddTransient<IConnectionStringGetter, ConnectionStringGetter>(
     c => new ConnectionStringGetter(builder.Configuration.GetConnectionString("SqlServer")));

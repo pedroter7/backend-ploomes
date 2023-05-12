@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
+using PloomesBackend.Controllers.Extensions;
 using PloomesBackend.Data.Exceptions;
 using PloomesBackend.Data.Models;
 using PloomesBackend.Data.Repository;
@@ -14,10 +15,12 @@ namespace PloomesBackend.Controllers
     public class ClienteController : Controller
     {
         private readonly IClienteRepository _clienteRepository;
+        private readonly IMapper _mapper;
 
-        public ClienteController(IClienteRepository clienteRepository)
+        public ClienteController(IClienteRepository clienteRepository, IMapper mapper)
         {
             _clienteRepository = clienteRepository;
+            _mapper = mapper;
         }
 
         [HttpGet]
@@ -33,12 +36,7 @@ namespace PloomesBackend.Controllers
                 return NotFound();
             }
 
-            return Ok(result.Select(c => new ClienteViewModel
-            {
-                CriadoData = c.DataCriacao,
-                Id = c.Id,
-                Nome = c.Nome
-            }));
+            return Ok(_mapper.Map<IEnumerable<ClienteViewModel>>(result));
         }
 
         [HttpPost]
@@ -53,20 +51,12 @@ namespace PloomesBackend.Controllers
             }
 
             var usuarioId = GetIdUsuarioAutenticado();
-            var dataModel = new CriarClienteModel
-            {
-                Nome = model.Nome
-            };
+            var dataModel = _mapper.Map<CriarClienteModel>(model);
 
             try
             {
                 var novoClienteId = await _clienteRepository.CriarCliente(usuarioId, dataModel);
-                return new ContentResult
-                {
-                    Content = JsonConvert.SerializeObject(new RecursoCriadoReturnViewModel { Id = novoClienteId }),
-                    ContentType = "application/json",
-                    StatusCode = StatusCodes.Status201Created
-                };
+                return this.CreatedJsonContentResult(new RecursoCriadoReturnViewModel { Id = novoClienteId });
             }
             catch (EntidadeJaExisteException)
             {
