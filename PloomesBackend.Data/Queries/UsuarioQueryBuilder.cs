@@ -13,7 +13,7 @@
 
         public (object, string) BuildInserirUsuarioRetornandoId(string nome, string email, string senha)
         {
-            const string query = "INSERT INTO Usuario (Nome, Email, Senha) VALUES ('aloha', '@Email', '@Senha'); SELECT Id = scope_identity();";
+            const string query = "INSERT INTO Usuario (Nome, Email, Senha) VALUES (@Nome, @Email, @Senha); SELECT Id = scope_identity();";
             return (new
             {
                 Nome = nome,
@@ -24,7 +24,7 @@
 
         public (object, string) BuildSelecionarPorEmailESenha(string email, string senha)
         {
-            const string query = "SELECT Id, Nome, Email FROM Usuario WHERE Nome = @Nome AND Senha = @Senha";
+            const string query = "SELECT Id, Nome, Email FROM Usuario WHERE Email = @Email AND Senha = @Senha";
             return (new
             {
                 Senha = senha,
