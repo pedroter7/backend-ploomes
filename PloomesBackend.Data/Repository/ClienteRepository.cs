@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using PloomesBackend.Data.Exceptions;
 using PloomesBackend.Data.Models;
 using PloomesBackend.Data.Queries;
 using PloomesBackend.Data.Util;
@@ -23,7 +24,19 @@ namespace PloomesBackend.Data.Repository
         {
             var (pars, query) = _clienteQueryBuilder.BuildInserirClienteRetornandoId(usuarioId, model);
             await using var conn = Connection;
-            return (await conn.QueryAsync<long>(query, pars)).First();
+            try
+            {
+                return (await conn.QueryAsync<long>(query, pars)).First();
+            }
+            catch (SqlException e)
+            {
+                if (e.Number == (int)SqlExceptionTypeEnum.UNIQUE_KEY_CONSTRAINT_VIOLATION)
+                {
+                    throw new EntidadeJaExisteException();
+                }
+
+                throw;
+            }
         }
 
         public async Task<IEnumerable<ClienteModel>> ListarClientesParaUsuario(long id)
