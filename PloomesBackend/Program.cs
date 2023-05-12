@@ -23,6 +23,8 @@ builder.Services.AddTransient<IConnectionStringGetter, ConnectionStringGetter>(
     c => new ConnectionStringGetter(builder.Configuration.GetConnectionString("SqlServer")));
 builder.Services.AddTransient<IUsuarioRepository, UsuarioRepository>();
 builder.Services.AddTransient<IUsuarioQueryBuilder, UsuarioQueryBuilder>();
+builder.Services.AddTransient<IClienteQueryBuilder, ClienteQueryBuilder>();
+builder.Services.AddTransient<IClienteRepository, ClienteRepository>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

@@ -1,7 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using PloomesBackend.Data.Models;
 using PloomesBackend.Data.Repository;
+using PloomesBackend.Security.Extensions;
 using PloomesBackend.ViewModels;
-using System.ComponentModel.DataAnnotations;
 
 namespace PloomesBackend.Controllers
 {
@@ -17,16 +20,12 @@ namespace PloomesBackend.Controllers
         }
 
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(IEnumerable<ClienteViewModel>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> ListarClientesParaUsuario([FromQuery][Range(1L, long.MaxValue)] long usuarioId)
+        [Authorize("EmailSenha")]
+        public async Task<IActionResult> ListarClientesParaUsuario()
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
+            var usuarioId = GetIdUsuarioAutenticado();
             var result = await _clienteRepository.ListarClientesParaUsuario(usuarioId);
             if (!result.Any())
             {
@@ -42,10 +41,39 @@ namespace PloomesBackend.Controllers
         }
 
         [HttpPost]
-        public Task<IActionResult> CriarClienteParaUsuario([FromQuery][Range(1L, long.MaxValue)] long usuarioId, 
-            [FromBody] CriarClienteViewModel model)
+        [ProducesResponseType(typeof(RecursoCriadoReturnViewModel), StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Authorize("EmailSenha")]
+        public async Task<IActionResult> CriarClienteParaUsuario([FromBody] CriarClienteViewModel model)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
 
+            var usuarioId = GetIdUsuarioAutenticado();
+            var dataModel = new CriarClienteModel
+            {
+                Nome = model.Nome
+            };
+            var novoClienteId = await _clienteRepository.CriarCliente(usuarioId, dataModel);
+            return new ContentResult
+            {
+                Content = JsonConvert.SerializeObject(new RecursoCriadoReturnViewModel { Id = novoClienteId }),
+                ContentType = "application/json",
+                StatusCode = StatusCodes.Status201Created
+            };
+        }
+
+        private long GetIdUsuarioAutenticado()
+        {
+            var usuarioId = HttpContext.User.GetUsuarioId();
+            if (usuarioId == null)
+            {
+                throw new Exception("Não foi possivel obter o ID do usuário autenticado");
+            }
+
+            return (long)usuarioId;
         }
     }
 }
