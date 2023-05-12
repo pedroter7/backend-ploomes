@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using PloomesBackend.Data.Exceptions;
 using PloomesBackend.Data.Repository;
 using PloomesBackend.ViewModels;
 
@@ -26,13 +27,23 @@ namespace PloomesBackend.Controllers
                 return BadRequest(ModelState);
             }
 
-            var id = await _usuarioRepository.InserirUsuario(model.Nome, model.Email, model.Senha);
-            return new ContentResult
+            try
             {
-                Content = JsonConvert.SerializeObject(new RecursoCriadoReturnViewModel { Id = id}),
-                ContentType = "application/json",
-                StatusCode = StatusCodes.Status201Created
-            };
+                var id = await _usuarioRepository.InserirUsuario(model.Nome, model.Email, model.Senha);
+                return new ContentResult
+                {
+                    Content = JsonConvert.SerializeObject(new RecursoCriadoReturnViewModel { Id = id }),
+                    ContentType = "application/json",
+                    StatusCode = StatusCodes.Status201Created
+                };
+            }
+            catch (EntidadeJaExisteException)
+            {
+                return BadRequest(new
+                {
+                    detalhes = $"Já existe usuário cadastrado com email {model.Email}"
+                });
+            }
         }
     }
 }

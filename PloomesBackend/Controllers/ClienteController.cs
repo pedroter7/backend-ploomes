@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
+using PloomesBackend.Data.Exceptions;
 using PloomesBackend.Data.Models;
 using PloomesBackend.Data.Repository;
 using PloomesBackend.Security.Extensions;
@@ -56,13 +57,24 @@ namespace PloomesBackend.Controllers
             {
                 Nome = model.Nome
             };
-            var novoClienteId = await _clienteRepository.CriarCliente(usuarioId, dataModel);
-            return new ContentResult
+
+            try
             {
-                Content = JsonConvert.SerializeObject(new RecursoCriadoReturnViewModel { Id = novoClienteId }),
-                ContentType = "application/json",
-                StatusCode = StatusCodes.Status201Created
-            };
+                var novoClienteId = await _clienteRepository.CriarCliente(usuarioId, dataModel);
+                return new ContentResult
+                {
+                    Content = JsonConvert.SerializeObject(new RecursoCriadoReturnViewModel { Id = novoClienteId }),
+                    ContentType = "application/json",
+                    StatusCode = StatusCodes.Status201Created
+                };
+            }
+            catch (EntidadeJaExisteException)
+            {
+                return BadRequest(new
+                {
+                    detalhes = $"Já existe cliente com nome {dataModel.Nome} para o usuário"
+                });
+            }
         }
 
         private long GetIdUsuarioAutenticado()

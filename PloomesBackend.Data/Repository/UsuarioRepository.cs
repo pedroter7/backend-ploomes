@@ -1,5 +1,6 @@
 ﻿using Dapper;
 using Microsoft.Data.SqlClient;
+using PloomesBackend.Data.Exceptions;
 using PloomesBackend.Data.Models;
 using PloomesBackend.Data.Queries;
 using PloomesBackend.Data.Util;
@@ -31,7 +32,19 @@ namespace PloomesBackend.Data.Repository
         {
             await using var conn = Connection;
             var (pars, query) = _queryBuilder.BuildInserirUsuarioRetornandoId(nome, email, senha);
-            return (await conn.QueryAsync<long>(query, pars)).First();
+            try
+            {
+                return (await conn.QueryAsync<long>(query, pars)).First();
+            }
+            catch (SqlException e)
+            {
+                if (e.Number == (int)SqlExceptionTypeEnum.UNIQUE_KEY_CONSTRAINT_VIOLATION)
+                {
+                    throw new EntidadeJaExisteException();
+                }
+
+                throw;
+            }
         }
 
         public async Task<UsuarioModel> BuscarUsuario(string email)
